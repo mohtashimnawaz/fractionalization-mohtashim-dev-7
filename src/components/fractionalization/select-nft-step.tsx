@@ -69,6 +69,18 @@ export function SelectNFTStep() {
     }, 3000);
   };
 
+  const handleConnectAdapter = async () => {
+    try {
+      if (!walletAdapter) return;
+      // walletAdapter.connect() will open the adapter modal (Phantom popup)
+      await walletAdapter.connect();
+      toast.success('Wallet adapter connected');
+    } catch (err) {
+      console.error('Adapter connect failed:', err);
+      toast.error('Failed to connect signing wallet');
+    }
+  };
+
   if (!account) {
     return (
       <div className="text-center py-12">
@@ -176,37 +188,47 @@ export function SelectNFTStep() {
                     Direct link to an image (PNG, JPG, GIF, etc.)
                   </p>
                 </div>
-                <Button
-                  onClick={handleMintCNFT}
-                  disabled={
-                    !mintForm.name ||
-                    !mintForm.symbol ||
-                    mintCNFT.isPending ||
-                    (useExistingTree ? !walletAdapter?.publicKey : !account?.address)
-                  }
-                  className="w-full"
-                  title={
-                    useExistingTree
-                      ? !walletAdapter?.publicKey
-                        ? 'Connect a signing wallet (Phantom/Solflare) to mint'
+                {useExistingTree && !walletAdapter?.publicKey ? (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">This flow requires a signing wallet to approve the mint transaction.</p>
+                    <Button onClick={handleConnectAdapter} className="w-full">
+                      Connect Signing Wallet
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleMintCNFT}
+                    disabled={
+                      !mintForm.name ||
+                      !mintForm.symbol ||
+                      mintCNFT.isPending ||
+                      (useExistingTree ? !walletAdapter?.publicKey : !account?.address)
+                    }
+                    className="w-full"
+                    title={
+                      useExistingTree
+                        ? !walletAdapter?.publicKey
+                          ? 'Connect a signing wallet (Phantom/Solflare) to mint'
+                          : undefined
+                        : !account?.address
+                        ? 'Connect a wallet to receive the minted cNFT'
                         : undefined
-                      : !account?.address
-                      ? 'Connect a wallet to receive the minted cNFT'
-                      : undefined
-                  }
-                >
-                  {mintCNFT.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Minting...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Mint cNFT
-                    </>
-                  )}
-                </Button>
+                    }
+                  >
+                    {mintCNFT.isPending ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Minting...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Mint cNFT
+                      </>
+                    )}
+                  </Button>
+                )}
+                
                 <p className="text-xs text-muted-foreground text-center">
                   This will create a compressed NFT on Solana Devnet using Helius API
                 </p>
