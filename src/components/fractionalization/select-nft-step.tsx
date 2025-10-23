@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Loader2, RefreshCw, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import Image from 'next/image';
 
 export function SelectNFTStep() {
@@ -43,12 +44,17 @@ export function SelectNFTStep() {
       return;
     }
 
-    await mintCNFT.mutateAsync({
-      name: mintForm.name,
-      symbol: mintForm.symbol,
-      description: mintForm.description || undefined,
-      imageUrl: mintForm.imageUrl || undefined,
-    });
+    try {
+      await mintCNFT.mutateAsync({
+        name: mintForm.name,
+        symbol: mintForm.symbol,
+        description: mintForm.description || undefined,
+        imageUrl: mintForm.imageUrl || undefined,
+      });
+    } catch (err) {
+      console.error('Mint failed:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to mint cNFT');
+    }
 
     // Reset form and close dialog
     setMintForm({ name: '', symbol: '', description: '', imageUrl: '' });
@@ -169,8 +175,9 @@ export function SelectNFTStep() {
                 </div>
                 <Button
                   onClick={handleMintCNFT}
-                  disabled={!mintForm.name || !mintForm.symbol || mintCNFT.isPending}
+                  disabled={!mintForm.name || !mintForm.symbol || mintCNFT.isPending || !account?.address}
                   className="w-full"
+                  title={!account?.address ? 'Connect wallet to mint' : undefined}
                 >
                   {mintCNFT.isPending ? (
                     <>

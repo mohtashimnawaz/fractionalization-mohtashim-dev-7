@@ -7,6 +7,8 @@
 import { useState } from 'react';
 import { useFractionalizationStore } from '@/stores';
 import { useFractionalize } from '@/hooks';
+import { useWallet } from '@/components/solana/solana-provider';
+import { toast } from 'sonner';
 import { FractionalizationStep } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,6 +20,7 @@ export function ConfigureTokensStep() {
   const router = useRouter();
   const { formData, updateFormData, setStep, resetForm } = useFractionalizationStore();
   const { mutate: fractionalize, isPending } = useFractionalize();
+  const { account } = useWallet();
 
   const [tokenName, setTokenName] = useState(formData.tokenName || '');
   const [tokenSymbol, setTokenSymbol] = useState(formData.tokenSymbol || '');
@@ -34,20 +37,34 @@ export function ConfigureTokensStep() {
       return;
     }
 
-    fractionalize(
-      {
-        nftMint: formData.nftMint,
-        tokenName,
-        tokenSymbol,
-        totalSupply,
-      },
-      {
-        onSuccess: () => {
-          resetForm();
-          router.push('/explorer');
+    if (!account?.address) {
+      toast.error('Please connect your wallet before fractionalizing');
+      return;
+    }
+
+    try {
+      fractionalize(
+        {
+          nftMint: formData.nftMint,
+          tokenName,
+          tokenSymbol,
+          totalSupply,
         },
-      }
-    );
+        {
+          onSuccess: () => {
+            resetForm();
+            router.push('/explorer');
+          },
+          onError: (err: Error) => {
+            toast.error(err?.message || 'Failed to fractionalize');
+            console.error('Fractionalize error:', err);
+          },
+        }
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to fractionalize');
+      console.error('Fractionalize thrown error:', err);
+    }
   };
 
   return (
@@ -133,8 +150,9 @@ export function ConfigureTokensStep() {
         </Button>
         <Button
           type="submit"
-          disabled={isPending || !tokenName || !tokenSymbol || !totalSupply}
+          disabled={isPending || !tokenName || !tokenSymbol || !totalSupply || !account?.address}
           className="flex-1"
+          title={!account?.address ? 'Connect wallet to fractionalize' : undefined}
         >
           {isPending ? (
             <>
