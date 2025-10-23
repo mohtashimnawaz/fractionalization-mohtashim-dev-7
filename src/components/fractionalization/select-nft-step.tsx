@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { useUserCNFTs, useMintCNFT } from '@/hooks';
 import { useWallet } from '@/components/solana/solana-provider';
+import { useWallet as useWalletAdapter } from '@solana/wallet-adapter-react';
 import { useFractionalizationStore } from '@/stores';
 import { FractionalizationStep } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,7 @@ export function SelectNFTStep() {
   const { data: nfts, isLoading, error, refetch } = useUserCNFTs(account?.address);
   const { formData, updateFormData, setStep } = useFractionalizationStore();
   const mintCNFT = useMintCNFT();
+  const walletAdapter = useWalletAdapter();
   
   const [isMintDialogOpen, setIsMintDialogOpen] = useState(false);
   const [mintForm, setMintForm] = useState({
@@ -175,9 +177,9 @@ export function SelectNFTStep() {
                 </div>
                 <Button
                   onClick={handleMintCNFT}
-                  disabled={!mintForm.name || !mintForm.symbol || mintCNFT.isPending || !account?.address}
+                  disabled={!mintForm.name || !mintForm.symbol || mintCNFT.isPending || !account?.address || !walletAdapter?.publicKey}
                   className="w-full"
-                  title={!account?.address ? 'Connect wallet to mint' : undefined}
+                  title={!account?.address || !walletAdapter?.publicKey ? 'Connect wallet to mint' : undefined}
                 >
                   {mintCNFT.isPending ? (
                     <>
