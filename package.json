@@ -76,6 +76,7 @@
     "@types/node": "^24.5.2",
     "@types/react": "^19.1.13",
     "@types/react-dom": "^19.1.9",
+  "pino-pretty": "^10.1.0",
     "eslint": "^9.35.0",
     "eslint-config-next": "15.5.3",
     "esrun": "^3.2.30",
