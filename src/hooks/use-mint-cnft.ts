@@ -191,22 +191,29 @@ export const useMintCNFT = () => {
 
   return useMutation({
     mutationFn: async (params: MintCNFTParams) => {
+      // Centralized, explicit checks for wallet connectivity.
+      // Some deployments may have one wallet context connected but not the other
+      // (wallet-ui account vs wallet-adapter publicKey). Require the expected
+      // combination depending on the minting mode.
       if (useExistingTree) {
-        // Mode 1: Use existing tree with user wallet signing
-        if (!walletAdapter.publicKey) {
-          throw new Error('Wallet not connected');
+        // Mode 1: Use existing tree - requires a wallet adapter capable of signing
+        if (!walletAdapter?.publicKey) {
+          // Return a controlled error so the UI can show a friendly message
+          // and avoid noisy repeated stack traces in console.
+          throw new Error('Wallet not connected. Please open your wallet (Phantom/Solflare) and connect to this site to sign the mint transaction.');
         }
 
-        if (!walletAdapter.signTransaction) {
+        if (!walletAdapter.signTransaction && !walletAdapter.signAllTransactions) {
           throw new Error('Wallet does not support transaction signing');
         }
 
         console.log('🔐 Using existing tree - user will sign transaction');
         return await mintWithExistingTree(params, connection, walletAdapter);
       } else {
-        // Mode 2: Use Helius API (fallback)
+        // Mode 2: Use Helius API (server-side mint). We still require an application
+        // wallet address so the minted asset can be assigned to the caller.
         if (!account?.address) {
-          throw new Error('Wallet not connected');
+          throw new Error('Wallet not connected. Please connect a wallet using the Connect button before minting.');
         }
 
         console.log('⚡ Using Helius Mint API - no signature required');

@@ -127,7 +127,7 @@ export const useFractionalize = () => {
   return useMutation({
     mutationFn: async (params: FractionalizeParams) => {
       if (!wallet.account?.address) {
-        throw new Error('Wallet not connected');
+        throw new Error('Wallet not connected. Please connect your wallet (via the Connect button) before fractionalizing a cNFT.');
       }
 
       return fractionalizeCompressedNFT(

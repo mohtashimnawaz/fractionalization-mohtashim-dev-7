@@ -27,6 +27,7 @@ export function SelectNFTStep() {
   const { formData, updateFormData, setStep } = useFractionalizationStore();
   const mintCNFT = useMintCNFT();
   const walletAdapter = useWalletAdapter();
+  const useExistingTree = !!process.env.NEXT_PUBLIC_MERKLE_TREE_ADDRESS;
   
   const [isMintDialogOpen, setIsMintDialogOpen] = useState(false);
   const [mintForm, setMintForm] = useState({
@@ -177,9 +178,22 @@ export function SelectNFTStep() {
                 </div>
                 <Button
                   onClick={handleMintCNFT}
-                  disabled={!mintForm.name || !mintForm.symbol || mintCNFT.isPending || !account?.address || !walletAdapter?.publicKey}
+                  disabled={
+                    !mintForm.name ||
+                    !mintForm.symbol ||
+                    mintCNFT.isPending ||
+                    (useExistingTree ? !walletAdapter?.publicKey : !account?.address)
+                  }
                   className="w-full"
-                  title={!account?.address || !walletAdapter?.publicKey ? 'Connect wallet to mint' : undefined}
+                  title={
+                    useExistingTree
+                      ? !walletAdapter?.publicKey
+                        ? 'Connect a signing wallet (Phantom/Solflare) to mint'
+                        : undefined
+                      : !account?.address
+                      ? 'Connect a wallet to receive the minted cNFT'
+                      : undefined
+                  }
                 >
                   {mintCNFT.isPending ? (
                     <>
@@ -307,8 +321,22 @@ export function SelectNFTStep() {
                 </div>
                 <Button
                   onClick={handleMintCNFT}
-                  disabled={!mintForm.name || !mintForm.symbol || mintCNFT.isPending}
+                  disabled={
+                    !mintForm.name ||
+                    !mintForm.symbol ||
+                    mintCNFT.isPending ||
+                    (useExistingTree ? !walletAdapter?.publicKey : !account?.address)
+                  }
                   className="w-full"
+                  title={
+                    useExistingTree
+                      ? !walletAdapter?.publicKey
+                        ? 'Connect a signing wallet (Phantom/Solflare) to mint'
+                        : undefined
+                      : !account?.address
+                      ? 'Connect a wallet to receive the minted cNFT'
+                      : undefined
+                  }
                 >
                   {mintCNFT.isPending ? (
                     <>
